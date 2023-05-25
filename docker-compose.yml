@@ -1,0 +1,31 @@
+#Configuracion de varios contenedores para un servicio 
+
+version: '3.7'
+services:
+  django-python:
+    image: django-python
+    restart: always
+    container_name: proyectofinal1
+    ports:
+      - 9999:8000
+    # volumes:
+    # - ./app:/code
+  web:
+    image: nginx
+    restart: always
+    ports:
+      - 9999:80
+
+# para la base de datos
+#bd
+# image mariadb
+#enviroment:
+
+#env-file:
+#   bd.txt
+# en host dde la vase de datis es bd por el nombre del contenedor bd
+#  
+#  MYSQL_ROOT_PASSWORD = {} y todas las demas variables de entorno
+# ports: 3306   
+
+

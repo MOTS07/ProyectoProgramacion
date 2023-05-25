@@ -1,0 +1,11 @@
+#Muestra una lista de los comandos que se van a ejecutar 
+#se hara con RUN pip install -r requirements.txt
+
+## django == 4.2.1
+## python == 3.11.3
+## ccrypt == 1.11.
+## mysqlclient ==  2.1.1
+
+django==4.2.1
+mysqlclient==2.1.1
+gunicorn==20.1.0

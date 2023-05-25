@@ -1,0 +1,23 @@
+.
+├── requirements.txt    # < Python module list
+└── ProyectoProgramacion1    # < Django Project root
+    ├── bd             # 
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── __pycache__ 
+    │   ├── migrations
+    │   ├── models.py
+    │   ├── tests.py
+    │   ├── urls.py
+    │   └── views.py
+    ├── manage.py      # 
+    ├── makemigrations.sh
+    ├── migrate.sh
+    ├── start.sh
+    └── ProyectoProgramacion1
+        ├── settings.py
+        ├── urls.py
+        ├── wsgi.py
+        ├── views.py
+        ├── asgi.py
+        └── templates

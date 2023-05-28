@@ -180,22 +180,84 @@ def formulario_usuarios(request):
 
 
 
-def opt_time():
 
-    return opt
+def opt_time(request): -> HttpResponse
+    """
+    Realiza la generacion del Codigo OTP, lo almacena en la sesion y contabiliza el tiempo
+    hasta 3 minutos para cerrar el proceso de registro.
 
-
-
-def enviar_otp(chat_id):
-    TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
+    Keyword Arguments:
+    request: request, página de verificacion OTP
+    returns: HttpResponse
+    """
+    t = 'verificar.html'
+    errores = []
     otp = ''.join(random.choices(string.digits, k=6))
-    chat_id = "1863011260"
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id{chat_id}=&text={otp}
+    request.session['opt'] = opt
+    tiempo_inicio = time.time()
+    tiempo_limite = tiempo_inicio + 180
+    chat_id = [] ##Tomarlo desde la base de datos
+    
+    enviar_otp(otp, chat_id)
+    while True:
+        tiempo_actual = time.time()
+        tiempo_restante = tiempo_limite - tiempo_actual
+
+        if tiempo_restante <= 0:
+            erroes.append('El codigo OTP ha expirado')
+            return render(request,t,{'erroes':errores})
+
+
+def enviar_otp(opt, chat_id):
+    """
+    Envia el codigo OPT, verifica el chat_id del usuario y
+    lo envia a travez del BOT de telegram del ID del usuario
+
+    Keyword Arguments:
+    otp: codigo OPT para enviar
+    chat_id: str, ID del chat de telegram del usuario
+    returns: bool, ¿¿¿Hace falta cambiar???
+
+    """
+    TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
+    chat_id = chat_id
+    opt = opt
+    # mi chat_id "1863011260"
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage
+    payload = {
+        "chat_id": chat_id
+        "text": opt
+    }
     response = requests.post(url, json=payload)
     if response.status_code == 200:
         return True
     else:
-        return False
+    return False
+
+
+def verificar_codigo_otp(request):
+    """
+    Verifica el código OTP almacenado en la sesión del navegador.
+
+    Keyword Arguments:
+    request: HttpRequest, solicitud HTTP
+    returns: HttpResponse
+    """
+    codigo_otp = request.GET.get('codigo_otp','')
+    errores =  []
+
+    if 'otp' in request.session:
+        otp = request.session['otp']
+
+        if codigo_otp == otp:
+            # El código OTP es válido
+            del request.session['otp']
+            return redirect('/inicio/')
+
+    # El código OTP es inválido
+    else:
+        erroes.append('El codigo OTP ha expirado')
+        return render(request,t,{'erroes':errores})
 
 
 

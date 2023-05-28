@@ -141,4 +141,62 @@ def identificar_usuario(request) -> HttpResponse:
             #    return render(request, template)
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
-        
+       
+
+
+
+
+def formulario_usuarios(request):
+    """
+    Realiza el registro de los usuarios
+
+    Keyword Arguments:
+    request: request, página del formulario de usuarios
+    returns: render(request)
+    """
+    t='registro.html'
+    if request.method == 'GET':
+        return render(request, t)
+    
+    else:
+        nombre = request.POST.get('nombre','').strip()
+        correo = request.POST.get('correo','').strip()
+        numero = request.POST.get('numero','').strip()
+        contraseña = request.POST.get('contraseña','').strip()
+        contraseña2 = request.POST.get('contraseña2','').strip()
+        errores = validar_usuarios(nombre,correo,numero,contraseña,contraseña2)
+
+        if errores:
+            c = {'errores': errores}
+            return render(request, t, c)
+        else:
+            n_usuario = models.Usuario(nombre=nombre,
+                                        correo=correo,
+                                       numero=numero,
+                                       contraseña=contraseña)
+            n_usuario.save()
+            #redirige a la verificacion del OTP
+            return redirect('/verificar/')
+
+
+
+def opt_time():
+
+    return opt
+
+
+
+def enviar_otp(chat_id):
+    TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
+    otp = ''.join(random.choices(string.digits, k=6))
+    chat_id = "1863011260"
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id{chat_id}=&text={otp}
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        return True
+    else:
+        return False
+
+
+
+

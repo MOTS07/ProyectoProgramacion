@@ -25,31 +25,31 @@
     <div class="row">
       <div class="col-lg-6 offset-lg-3">
           {% csrf_token %}
-        <form id="formulario" action="/registro/" method="POST"\>
+        <form id="formulario" action="/registro/" method="POST">
         {% csrf_token %}
           <div class="mb-3">
             <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="nombre" placeholder="Ingresa tu nombre"  required>
+            <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingresa tu nombre"  required>
           </div>
 
           <div class="mb-3">
             <label for="correo" class="form-label">Correo Electrónico</label>
-            <input type="email" class="form-control" id="correo" placeholder="Ingresa tu email" required>
+            <input type="email" class="form-control" name="correo" id="correo" placeholder="Ingresa tu email" required>
           </div>
           
           <div class="mb-3">
             <label for="numero" class="form-label">Número telegram</label>
-            <input type="tel" class="form-control" id="numero" placeholder="Ingresa tu numero de telegram" required>
+            <input type="tel" class="form-control" name="numero"  id="numero" placeholder="Ingresa tu numero de telegram" required>
           </div>
           
           <div class="mb-3">
             <label for="contrasena" class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="contrasena" placeholder="Ingresa tu contraseña" required>
+            <input type="password" class="form-control" name="contraseña" id="contraseña" placeholder="Ingresa tu contraseña" required>
           </div>
           
           <div class="mb-3">
             <label for="confirmar-contrasena" class="form-label">Confirmar Contraseña</label>
-            <input type="password" class="form-control" id="contraseña2" placeholder="Repite tu contraseña" required>
+            <input type="password" class="form-control" name="contraseña2" id="contraseña2" placeholder="Repite tu contraseña" required>
           </div>
           
           <button type="submit" class="btn btn-primary">Registrar</button>

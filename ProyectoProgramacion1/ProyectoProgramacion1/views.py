@@ -4,6 +4,12 @@ from datetime import datetime
 from bd import models 
 from datetime import timezone
 
+import random
+import string
+import time
+import requests
+
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
@@ -143,7 +149,21 @@ def identificar_usuario(request) -> HttpResponse:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
        
 
-
+def validar_usuarios(nombre,correo,numero,contraseña,contraseña2):
+    errores = []
+    if not nombre:
+        errores.append('El nombre está vacío')
+    if not correo:
+        errores.append('El correo esta vacío')
+    if not numero.isnumeric():
+        errores.append('La numero esta vacío')
+    if not contraseña:
+        errores.append('La contraseña esta vacia')
+    if not contraseña2:
+        errores.append('La contraseña esta vacia')
+    if contraseña != contraseña2:
+        errores.append('Las contraseñas no son iguales')
+    return errores
 
 
 def formulario_usuarios(request):
@@ -170,18 +190,19 @@ def formulario_usuarios(request):
             c = {'errores': errores}
             return render(request, t, c)
         else:
-            n_usuario = models.Usuario(nombre=nombre,
-                                        correo=correo,
-                                       numero=numero,
-                                       contraseña=contraseña)
-            n_usuario.save()
+            #n_usuario = models.Usuario(nombre=nombre,
+            #                            correo=correo,
+            #                           numero=numero,
+            #                           contraseña=contraseña)
+            #n_usuario.save()
             #redirige a la verificacion del OTP
+            enviar_otp(request) 
             return redirect('/verificar/')
 
 
 
 
-def opt_time(request): -> HttpResponse
+def otp_time(request) -> HttpResponse:
     """
     Realiza la generacion del Codigo OTP, lo almacena en la sesion y contabiliza el tiempo
     hasta 3 minutos para cerrar el proceso de registro.
@@ -193,22 +214,23 @@ def opt_time(request): -> HttpResponse
     t = 'verificar.html'
     errores = []
     otp = ''.join(random.choices(string.digits, k=6))
-    request.session['opt'] = opt
+    request.session['opt'] = otp
     tiempo_inicio = time.time()
     tiempo_limite = tiempo_inicio + 180
-    chat_id = [] ##Tomarlo desde la base de datos
+    #chat_id = [] ##Tomarlo desde la base de datos
     
-    enviar_otp(otp, chat_id)
+    enviar_otp(otp)
     while True:
         tiempo_actual = time.time()
         tiempo_restante = tiempo_limite - tiempo_actual
 
         if tiempo_restante <= 0:
-            erroes.append('El codigo OTP ha expirado')
-            return render(request,t,{'erroes':errores})
+            errores.append('El codigo OTP ha expirado')
+            return render(request,t,{'errores':errores})
+        
 
 
-def enviar_otp(opt, chat_id):
+def enviar_otp(request):
     """
     Envia el codigo OPT, verifica el chat_id del usuario y
     lo envia a travez del BOT de telegram del ID del usuario
@@ -219,20 +241,31 @@ def enviar_otp(opt, chat_id):
     returns: bool, ¿¿¿Hace falta cambiar???
 
     """
+    #t = 'verificar.html'
     TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
-    chat_id = chat_id
-    opt = opt
-    # mi chat_id "1863011260"
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage
-    payload = {
-        "chat_id": chat_id
-        "text": opt
-    }
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        return True
-    else:
-    return False
+    #chat_id = chat_id
+    otp = ''.join(random.choices(string.digits, k=6))
+    chat_id = 1863011260
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={otp}" 
+    requests.post(url)
+    request.session['otp'] = otp
+    #return otp
+    #requests.session['opt'] = otp
+    #tiempo_inicio = time.time()
+    #tiempo_limite = tiempo_inicio + 180
+    ##chat_id = [] ##Tomarlo desde la base de datos
+
+    #while True:
+    #    tiempo_actual = time.time()
+    #    tiempo_restante = tiempo_limite - tiempo_actual
+
+    #    if tiempo_restante <= 0:
+    #       errores.append('El codigo OTP ha expirado')
+    #       return render(request,t,{'errores':errores})
+
+    
+
+
 
 
 def verificar_codigo_otp(request):
@@ -243,21 +276,22 @@ def verificar_codigo_otp(request):
     request: HttpRequest, solicitud HTTP
     returns: HttpResponse
     """
-    codigo_otp = request.GET.get('codigo_otp','')
-    errores =  []
-
-    if 'otp' in request.session:
-        otp = request.session['otp']
-
-        if codigo_otp == otp:
-            # El código OTP es válido
-            del request.session['otp']
-            return redirect('/inicio/')
-
-    # El código OTP es inválido
+    #otp = enviar_otp(request)
+    otp = request.session.get('otp')
+    t = "verificar.html"
+    if request.method == 'GET':
+        return render(request,t)
     else:
-        erroes.append('El codigo OTP ha expirado')
-        return render(request,t,{'erroes':errores})
+        codigo_otp = request.POST.get('codigo_otp','').strip()
+        print(codigo_otp)
+        print(otp)
+        errores =  []
+        if otp == codigo_otp:
+            return redirect('/inicio/')
+            # El código OTP es inválido
+        else:
+            errores.append('El codigo esta erroneo')
+            return render(request,t,{'errores':errores})
 
 
 

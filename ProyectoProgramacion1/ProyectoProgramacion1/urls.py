@@ -22,4 +22,5 @@ urlpatterns = [
     path('autenticacion/',views.identificar_usuario),
     path('inicio/',views.mandar_inicio),
     path('registro/',views.formulario_usuarios),
+    path('verificar/',views.verificar_codigo_otp),
 ]

@@ -1,0 +1,42 @@
+{% extends 'baseAuth.html' %}
+{% block titulo %}Registro{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+
+{% block encabezado %}Ingresa tu código OTP{% endblock %}
+
+{% block contenido %}
+{% if errores %}
+
+<div class="text-danger">
+  <ul>
+    {% for error in errores %}
+       <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endif %}
+
+
+  <div class="container">
+  <p class="text-center text-sm-start">
+  El codigo OTP fue enviado desdel el bot de telegram "TokenProgramacion"
+  </p>
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-lg-6 offset-lg-3">
+        <form id="formulario" action="/verificar/" method="POST">
+        {% csrf_token %}
+          <div class="mb-3">
+            <label for="nombre" class="form-label">OTP</label>
+            <input type="text" class="form-control" name="codigo_otp" id="codigo_otp" placeholder="Ingresa tu nombre"  required>
+          </div>
+         
+          <button type="submit" class="btn btn-primary">Registrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

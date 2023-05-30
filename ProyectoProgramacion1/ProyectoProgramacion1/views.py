@@ -8,6 +8,9 @@ import random
 import string
 import time
 import requests
+import import crypt
+import os
+import base64
 
 
 def get_client_ip(request):
@@ -196,7 +199,7 @@ def formulario_usuarios(request):
             n_usuario = models.RegistroAdmin(nombre=nombre,
                                              correo=correo,
                                              id_telegram=id_telegram,
-                                             contraseña=contraseña,
+                                             contraseña=encriptar_password(contraseña),
                                              ip_server=ip_server)
             n_usuario.save()
             return redirect('/verificar/')
@@ -247,7 +250,7 @@ def enviar_otp(request):
     TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
     #chat_id = chat_id
     otp = ''.join(random.choices(string.digits, k=6))
-    chat_id = 1863011260
+    -
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={otp}" 
     requests.post(url)
     ## hacer otro for a la base de datos para verificar el chat_id 
@@ -291,7 +294,18 @@ def verificar_codigo_otp(request):
                     errores.append('El codigo es erroneo')
                     return render(request,t,{'errores':errores})
 
-   
+def encriptar_password(secreto) -> String:
+    """Cifra una cadena de contraseña con SHA256 y utilizando salt
+
+    Args:
+        secreto (String): Contraseña a cifrar
+
+    Returns:
+        String: Contraseña cifrada
+    """
+    salt = base64.b64encode(os.urandom(16)).decode('UTF-8')
+    cifrado = crypt.crypt(secreto, '$6' + salt )
+    return cifrado
 
 
 

@@ -149,18 +149,20 @@ def identificar_usuario(request) -> HttpResponse:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
        
 
-def validar_usuarios(nombre,correo,numero,contraseña,contraseña2):
+def validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_server):
     errores = []
     if not nombre:
         errores.append('El nombre está vacío')
     if not correo:
         errores.append('El correo esta vacío')
-    if not numero.isnumeric():
-        errores.append('La numero esta vacío')
+    if not id_telegram.isnumeric():
+        errores.append('El ID esta vacío')
     if not contraseña:
         errores.append('La contraseña esta vacia')
     if not contraseña2:
         errores.append('La contraseña esta vacia')
+    if not ip_server:
+        errores.append('La direccion IP está vacía')
     if contraseña != contraseña2:
         errores.append('Las contraseñas no son iguales')
     return errores
@@ -181,22 +183,22 @@ def formulario_usuarios(request):
     else:
         nombre = request.POST.get('nombre','').strip()
         correo = request.POST.get('correo','').strip()
-        numero = request.POST.get('numero','').strip()
+        id_telegram = request.POST.get('id_telegram','').strip()
         contraseña = request.POST.get('contraseña','').strip()
         contraseña2 = request.POST.get('contraseña2','').strip()
-        errores = validar_usuarios(nombre,correo,numero,contraseña,contraseña2)
+        ip_server = request.POST.get('ip_server','').strip()
+        errores = validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_server)
 
         if errores:
             c = {'errores': errores}
             return render(request, t, c)
         else:
-            #n_usuario = models.Usuario(nombre=nombre,
-            #                            correo=correo,
-            #                           numero=numero,
-            #                           contraseña=contraseña)
-            #n_usuario.save()
-            #redirige a la verificacion del OTP
-            enviar_otp(request) 
+            n_usuario = models.RegistroAdmin(nombre=nombre,
+                                             correo=correo,
+                                             id_telegram=id_telegram,
+                                             contraseña=contraseña,
+                                             ip_server=ip_server)
+            n_usuario.save()
             return redirect('/verificar/')
 
 
@@ -248,21 +250,12 @@ def enviar_otp(request):
     chat_id = 1863011260
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={otp}" 
     requests.post(url)
-    request.session['otp'] = otp
-    #return otp
-    #requests.session['opt'] = otp
-    #tiempo_inicio = time.time()
-    #tiempo_limite = tiempo_inicio + 180
-    ##chat_id = [] ##Tomarlo desde la base de datos
-
-    #while True:
-    #    tiempo_actual = time.time()
-    #    tiempo_restante = tiempo_limite - tiempo_actual
-
-    #    if tiempo_restante <= 0:
-    #       errores.append('El codigo OTP ha expirado')
-    #       return render(request,t,{'errores':errores})
-
+    ## hacer otro for a la base de datos para verificar el chat_id 
+    ## del usuario y compararlo con el OTP y darle return a la funcion
+    ## con el chat_id
+    otp_bd = models.OTP(otp=otp)
+    otp_bd.save()
+    return chat_id 
     
 
 
@@ -276,22 +269,29 @@ def verificar_codigo_otp(request):
     request: HttpRequest, solicitud HTTP
     returns: HttpResponse
     """
-    #otp = enviar_otp(request)
-    otp = request.session.get('otp')
+    chat_id = enviar_otp(request)
+    print("chat_id =",chat_id)
+    #otp = request.session.get('otp')
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
     else:
+        chat_id_bd = request.POST.get('chat_id','').strip()
         codigo_otp = request.POST.get('codigo_otp','').strip()
-        print(codigo_otp)
-        print(otp)
-        errores =  []
-        if otp == codigo_otp:
-            return redirect('/inicio/')
-            # El código OTP es inválido
-        else:
-            errores.append('El codigo esta erroneo')
-            return render(request,t,{'errores':errores})
+        print("OTP form=",codigo_otp)
+        for codigo_t in models.OTP.objects.all():
+            if chat_id == codigo_t.id_telegram:
+                otp = codigo_t.otp
+                print("Chat ID funciona")
+                if codigo_otp == codigo_t.otp:
+                    return redirect('/inicio')
+
+                else:
+                    errores = []
+                    errores.append('El codigo es erroneo')
+                    return render(request,t,{'errores':errores})
+
+   
 
 
 

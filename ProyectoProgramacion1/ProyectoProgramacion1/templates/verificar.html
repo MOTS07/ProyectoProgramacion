@@ -29,6 +29,13 @@
       <div class="col-lg-6 offset-lg-3">
         <form id="formulario" action="/verificar/" method="POST">
         {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">CHAT ID TELEGRAM</label>
+            <input type="text" class="form-control" name="id_telegram" id="id_telegram" placeholder="Ingresa tu nombre"  required>
+          </div>
+
+
           <div class="mb-3">
             <label for="nombre" class="form-label">OTP</label>
             <input type="text" class="form-control" name="codigo_otp" id="codigo_otp" placeholder="Ingresa tu nombre"  required>

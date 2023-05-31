@@ -14,7 +14,7 @@ class Intentos(models.Model):
 class OTP(models.Model):
     id_telegram = models.CharField(max_length = 64)
     otp = models.CharField(max_length=10)
-
+    tiempo_exp = models.DateTimeField()
 
 class RegistroAdmin(models.Model):
     nombre = models.CharField(max_length = 200)

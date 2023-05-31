@@ -1,6 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from datetime import datetime
+from datetime import datetime, timedelta
 from bd import models 
 from datetime import timezone
 
@@ -257,7 +257,9 @@ def enviar_otp(request, id_telegram):
     ## hacer otro for a la base de datos para verificar el chat_id 
     ## del usuario y compararlo con el OTP y darle return a la funcion
     ## con el chat_id
-    otp_bd = models.OTP(id_telegram=chat_id,otp=otp)
+    tiempo_exp = datetime.now(timezone.utc) + timedelta(minutes=3)
+    print(tiempo_exp)
+    otp_bd = models.OTP(id_telegram=chat_id,otp=otp,tiempo_exp=tiempo_exp)
     otp_bd.save()
     return chat_id 
     
@@ -265,7 +267,7 @@ def enviar_otp(request, id_telegram):
 
 
 
-def verificar_codigo_otp(request):
+def verificar_codigo_otp_real(request):
     """
     Verifica el código OTP almacenado en la sesión del navegador.
 
@@ -309,6 +311,7 @@ def verificar_codigo_otp(request):
 ## la base de datos debe de tener un campo de fecha de expiración
 ## del token
 ## tener una funcion ejecutandose que permita borrar tokens que han
+
 ## pasado el tiempo de 3 minutos.
 
 
@@ -316,4 +319,80 @@ def verificar_codigo_otp(request):
 ## que haga peticiones constantes a una URL que llame a la funcion
 ## de verificacion de tiempo de los OTP
 
+def tiempo_otp(request):
+    """
+    Borra los OTP con más de 3 minutos de tiempo
+
+    Keyword Arguments:
+
+    return: JsonResponse
+    """
+    tiempo_actual = datetime.now()
+    for tiempo in models.OTP.objects.all():
+        tiempo_exp = tiempo.tiempo_exp
+        id_telegram = tiempo.id_telegram
+        otp = tiempo.otp
+        if tiempo_actual > tiempo_exp:
+            otp.delete()
+            id_telegram.delete()
+            tiempo_exp.delete()
+    return HttpResponse("Token expirado")
+
+
+
+
+
+
+def verificar_codigo_otp(request):
+    """
+    Verifica el código OTP almacenado en la sesión del navegador.
+
+    Keyword Arguments:
+    request: HttpRequest, solicitud HTTP
+    returns: HttpResponse
+    """
+    #chat_id = enviar_otp(request)
+    #print("chat_id =",chat_id)
+    #otp = request.session.get('otp')
+
+    ### hacer una bandera con el contador de las peticiones POST
+    ### si pasa de uno borrar el token de inicio de sesion
+    t = "verificar.html"
+    if request.method == 'GET':
+        return render(request,t)
+    else:
+        chat_id_bd = request.POST.get('id_telegram','').strip()
+        codigo_otp = request.POST.get('codigo_otp','').strip()
+        print("OTP form=",codigo_otp)
+        print("CHATID=",chat_id_bd)
+        tiempo_actual = datetime.now(timezone.utc) 
+        for codigo_t in models.OTP.objects.all():
+            id_tel = codigo_t.id_telegram
+            tiempo_exp = codigo_t.tiempo_exp
+            print("id_telegram for =",id_tel)
+            otp = codigo_t.otp
+            print("codigo_otp for =",otp)
+            if tiempo_actual > tiempo_exp:
+                #id_expirado = models.OTP.objects.filter('id_telegram'=id_telegram)
+                #otp_expirado = models.OTP.objects.filter('otp'=otp)
+                #time_expirado = models.OTP.objects.filter('tiempo_exp'=)
+                registros_expirados = models.OTP.objects.filter(id_telegram=id_tel, otp=otp, tiempo_exp=tiempo_exp)
+                print(registros_expirados)
+                registros_expirados.delete()
+                #id_expirado.delete()
+                #otp_expirado.delete()
+                #time_expirado.delete()
+                return HttpResponse("OTP expirado")
+            elif chat_id_bd == id_tel and codigo_otp == otp:
+                print("Chat ID funciona")
+                ultimo_id = models.OTP.objects.latest('id_telegram')
+                ultimo_otp = models.OTP.objects.latest('otp')
+                ultimo_id.delete()
+                ultimo_otp.delete()
+                return redirect('/inicio/')
+         #else:
+            #   errores = []
+            #    errores.append('El codigo es erroneo')
+                #render(request,t,{'errores':errores})
+    return HttpResponse("Token erroneo")
 

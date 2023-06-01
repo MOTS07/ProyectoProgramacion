@@ -8,7 +8,7 @@ import random
 import string
 import time
 import requests
-import import crypt
+import crypt
 import os
 import base64
 
@@ -203,6 +203,7 @@ def formulario_usuarios(request):
                                              ip_server=ip_server)
             n_usuario.save()
             enviar_otp(request, id_telegram)
+            request.session['registrado'] = True
             return redirect('/verificar/')
 
 
@@ -254,7 +255,6 @@ def enviar_otp(request, id_telegram):
     TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
     #chat_id = chat_id
     otp = ''.join(random.choices(string.digits, k=6))
-    -
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={otp}" 
     requests.post(url)
     ## hacer otro for a la base de datos para verificar el chat_id 
@@ -284,6 +284,9 @@ def verificar_codigo_otp_real(request):
 
     ### hacer una bandera con el contador de las peticiones POST
     ### si pasa de uno borrar el token de inicio de sesion
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/registro/')
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
@@ -360,6 +363,9 @@ def verificar_codigo_otp(request):
 
     ### hacer una bandera con el contador de las peticiones POST
     ### si pasa de uno borrar el token de inicio de sesion
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/registro/')
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
@@ -396,7 +402,7 @@ def verificar_codigo_otp(request):
                     errores.append('El codigo es erroneo')
                     return render(request,t,{'errores':errores})
 
-def encriptar_password(secreto) -> String:
+def encriptar_password(secreto) -> string:
     """Cifra una cadena de contraseña con SHA256 y utilizando salt
 
     Args:

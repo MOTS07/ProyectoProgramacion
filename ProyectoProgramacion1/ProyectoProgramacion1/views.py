@@ -30,9 +30,9 @@ def mandar_inicio(request) -> HttpResponse:
     request -- 
     returns: HttpResponse 
     """
-    logueado = request.session.get('logueado', False)
-    if not logueado:
-        return redirect('/registro/')
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/autenticacion/')
     return HttpResponse('Hola mundo')
 
 def recuperar_info_ip(ip:str) -> models.Intentos:
@@ -125,17 +125,17 @@ def credenciales(usuario,contra) -> bool:
         bool: True si se encuentra el usuario
     """
     try:
-        usuario = models.RegistroAdmin.objects.get(Nombre=usuario)
-        print("pasó")
+        usuario = models.RegistroAdmin.objects.get(nombre=usuario)
         #El usuario existe, ahora comparar contraseñas
-        partes = usuario.Password.split('$')
+        partes = usuario.contraseña.split('$')
         salt = '$' + partes[1] + '$' + partes[2]
         contra_cifrada = crypt.crypt(contra, salt)
-        if contra_cifrada == usuario.Password:
+        if contra_cifrada == usuario.contraseña:
             return True
         else:
             return False
-    except:
+    except Exception as error:
+        print(error)
         return False
 
 
@@ -166,7 +166,7 @@ def identificar_usuario(request) -> HttpResponse:
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
             #enviar_otp(request) aqui debería mandar el otp para la autenticanción de dos pasos
-            request.session['logueado'] = True
+            request.session['registrado'] = True
             return redirect('/inicio/')
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
@@ -216,6 +216,7 @@ def formulario_usuarios(request):
             c = {'errores': errores}
             return render(request, t, c)
         else:
+            print(encriptar_password(contraseña))
             n_usuario = models.RegistroAdmin(nombre=nombre,
                                              correo=correo,
                                              id_telegram=id_telegram,

@@ -17,7 +17,14 @@ import os
 import base64
 
 
-def get_client_ip(request):
+def get_client_ip(request) -> ip:
+    """
+    Obtiene la direccion IP del usuario
+    
+    Keyword Arguments:
+    request --
+    return: ip
+    """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
@@ -28,7 +35,7 @@ def get_client_ip(request):
 
 def mandar_inicio(request) -> HttpResponse:
     """
-    Vista de inicio.
+    Vista de inicio con una cookie asignada
 
     Keyword Arguments:
     request -- 
@@ -42,6 +49,10 @@ def mandar_inicio(request) -> HttpResponse:
 def logout_view(request) -> redirect:
     """
     Regresa a la pagina de inicio
+    
+    Keyword Arguments:
+    request --
+    returns: redirect
     """
     logout(request)
     request.session.flush()
@@ -126,7 +137,15 @@ def puede_intentar_loguearse(request, tiempo_limite=60, intentos_maximos=3) -> b
 
 
 
-def credenciales(usuario,contra):
+def credenciales(usuario,contra) -> bool:
+    """
+    Determina si las credenciales existen
+    
+    Keyword Arguments:
+    usuario: Nombre del usuario
+    contra: Contraseña del usuario
+    returns: bool
+    """
     try:
         usuarios = models.LoginAdmin.objects.get(Nombre=usuario, Password=contra)
         return True
@@ -168,7 +187,20 @@ def identificar_usuario(request) -> HttpResponse:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
        
 
-def validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_server):
+def validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_server) -> errores:
+    """
+    Valida que los campos del formulario no esten vacios
+    
+    Keyword Arguments:
+    nombre: Nombre del usuario que ingresa
+    correo: Correo del usuario que ingresa
+    id_telegram: ID del usuario que ingresa
+    contraseña: Contraseña del usuario que ingresa
+    contraseña2: Segunda contraseña que ingresa el usuario
+    ip_server: Direccion IP del servidor del usuario que ingresa
+    
+    return: errores
+    """
     errores = []
     if not nombre:
         errores.append('El nombre está vacío')
@@ -187,7 +219,7 @@ def validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_serve
     return errores
 
 
-def formulario_usuarios(request):
+def formulario_usuarios(request) -> render(request):
     """
     Realiza el registro de los usuarios
 
@@ -251,7 +283,7 @@ def otp_time(request) -> HttpResponse:
         
 
 
-def enviar_otp(request, id_telegram):
+def enviar_otp(request, id_telegram) -> bool:
     """
     Envia el codigo OPT, verifica el chat_id del usuario y
     lo envia a travez del BOT de telegram del ID del usuario
@@ -284,7 +316,7 @@ def enviar_otp(request, id_telegram):
 
 
 
-def verificar_codigo_otp_real(request):
+def verificar_codigo_otp_real(request) -> HttpResponse:
     """
     Verifica el código OTP almacenado en la sesión del navegador.
 
@@ -339,13 +371,13 @@ def verificar_codigo_otp_real(request):
 ## que haga peticiones constantes a una URL que llame a la funcion
 ## de verificacion de tiempo de los OTP
 
-def tiempo_otp(request):
+def tiempo_otp(request) -> request:
     """
     Borra los OTP con más de 3 minutos de tiempo
 
     Keyword Arguments:
-
-    return: JsonResponse
+    request --
+    return: HttpResponse
     """
     tiempo_actual = datetime.now()
     for tiempo in models.OTP.objects.all():
@@ -363,7 +395,7 @@ def tiempo_otp(request):
 
 
 
-def verificar_codigo_otp(request):
+def verificar_codigo_otp(request) -> HttpResponse:
     """
     Verifica el código OTP almacenado en la sesión del navegador.
 

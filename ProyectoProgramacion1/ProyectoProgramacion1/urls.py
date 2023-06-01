@@ -23,4 +23,5 @@ urlpatterns = [
     path('inicio/',views.mandar_inicio),
     path('registro/',views.formulario_usuarios),
     path('verificar/',views.verificar_codigo_otp),
+    path('logout/', logout_view, name='logout'),
 ]

@@ -47,6 +47,7 @@ def recuperar_info_ip(ip:str) -> models.Intentos:
         return None
 
 
+
 def fecha_en_intervalo(fecha_ultimo_intento:datetime, ahora:datetime, tiempo_limite:int) -> bool:
     """
     Determina si fecha_ultimo_intento está dentro del intervalo de tiempo definido por tiempo_limite.
@@ -75,7 +76,6 @@ def modificar_registro(registro:models.Intentos, ahora: datetime, intentos=1) ->
     registro.intentos = intentos
     registro.fecha_ultimo_intento = ahora
     registro.save()
-
 
 def puede_intentar_loguearse(request, tiempo_limite=60, intentos_maximos=3) -> bool:
     """
@@ -110,10 +110,28 @@ def puede_intentar_loguearse(request, tiempo_limite=60, intentos_maximos=3) -> b
 
 
 
-def credenciales(usuario,contra):
+def credenciales(usuario,contra) -> bool:
+    """Regresa verdadero si se encuentra un usuario en la BD
+    con el usuario y contraseña pasados como argumento
+
+    Args:
+        usuario (string): Campo de usuario en el formulario de login
+        contra (string): Contraseña en texto plano en el formulario de login
+
+    Returns:
+        bool: True si se encuentra el usuario
+    """
     try:
-        usuarios = models.LoginAdmin.objects.get(Nombre=usuario, Password=contra)
-        return True
+        usuario = models.RegistroAdmin.objects.get(Nombre=usuario)
+        print("pasó")
+        #El usuario existe, ahora comparar contraseñas
+        partes = usuario.Password.split('$')
+        salt = '$' + partes[1] + '$' + partes[2]
+        contra_cifrada = crypt.crypt(contra, salt)
+        if contra_cifrada == usuario.Password:
+            return True
+        else:
+            return False
     except:
         return False
 
@@ -132,7 +150,6 @@ def identificar_usuario(request) -> HttpResponse:
     if request.method == 'GET':
         return render(request, template)
     else:
-    #request.method == 'POST':
         errores = []
         usuario = request.POST.get('nombre','').strip()
         contra = request.POST.get('password','').strip()
@@ -145,9 +162,8 @@ def identificar_usuario(request) -> HttpResponse:
             if not credenciales(usuario,contra):
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
+            #enviar_otp(request) aqui debería mandar el otp para la autenticanción de dos pasos
             return redirect('/inicio/')
-            #else:
-            #    return render(request, template)
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
        
@@ -202,9 +218,9 @@ def formulario_usuarios(request):
                                              contraseña=encriptar_password(contraseña),
                                              ip_server=ip_server)
             n_usuario.save()
-            enviar_otp(request, id_telegram)
+            #enviar_otp(request, id_telegram) #solo se registra, el otp es para el login
             request.session['registrado'] = True
-            return redirect('/verificar/')
+            return redirect('/inicio/')
 
 
 
@@ -237,7 +253,7 @@ def otp_time(request) -> HttpResponse:
         
 
 
-def enviar_otp(request, id_telegram):
+def enviar_otp(request,id_telegram):
     """
     Envia el codigo OPT, verifica el chat_id del usuario y
     lo envia a travez del BOT de telegram del ID del usuario
@@ -245,162 +261,78 @@ def enviar_otp(request, id_telegram):
     Keyword Arguments:
     otp: codigo OPT para enviar
     chat_id: str, ID del chat de telegram del usuario
-    returns: bool, ¿¿¿Hace falta cambiar???
+    returns: chat_id, lo utiliza la funcion de verificar_codigo_otp
 
     """
-    ##un for con el utlimo Tomas el chat id de la base de datos 
-    #t = 'verificar.html'
+    request = request
     chat_id = id_telegram
     print("URL",chat_id)
     TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
-    #chat_id = chat_id
     otp = ''.join(random.choices(string.digits, k=6))
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={otp}" 
     requests.post(url)
-    ## hacer otro for a la base de datos para verificar el chat_id 
-    ## del usuario y compararlo con el OTP y darle return a la funcion
-    ## con el chat_id
     tiempo_exp = datetime.now(timezone.utc) + timedelta(minutes=3)
     print(tiempo_exp)
     otp_bd = models.OTP(id_telegram=chat_id,otp=otp,tiempo_exp=tiempo_exp)
     otp_bd.save()
-    return chat_id 
-    
-
-
-
-
-def verificar_codigo_otp_real(request):
-    """
-    Verifica el código OTP almacenado en la sesión del navegador.
-
-    Keyword Arguments:
-    request: HttpRequest, solicitud HTTP
-    returns: HttpResponse
-    """
-    #chat_id = enviar_otp(request)
-    #print("chat_id =",chat_id)
-    #otp = request.session.get('otp')
-
-    ### hacer una bandera con el contador de las peticiones POST
-    ### si pasa de uno borrar el token de inicio de sesion
-    registrado = request.session.get('registrado', False)
-    if not registrado:
-        return redirect('/registro/')
-    t = "verificar.html"
-    if request.method == 'GET':
-        return render(request,t)
-    else:
-        chat_id_bd = request.POST.get('id_telegram','').strip()
-        codigo_otp = request.POST.get('codigo_otp','').strip()
-        print("OTP form=",codigo_otp)
-        print("CHATID=",chat_id_bd)
-        for codigo_t in models.OTP.objects.all():
-            id_tel = codigo_t.id_telegram
-            print("id_telegram for =",id_tel)
-            otp = codigo_t.otp
-            print("codigo_otp for =",otp)
-            if chat_id_bd == id_tel and codigo_otp == otp:
-                print("Chat ID funciona")
-                ultimo_id = models.OTP.objects.latest('id_telegram')
-                ultimo_otp = models.OTP.objects.latest('otp')
-                ultimo_id.delete()
-                ultimo_otp.delete()
-                return redirect('/inicio/')
-         #else:
-            #   errores = []
-            #    errores.append('El codigo es erroneo')
-                #render(request,t,{'errores':errores})
-    return HttpResponse("Token erroneo")
-
-## un if que verifique la fecha de tiempo de expiración del token,
-## la base de datos debe de tener un campo de fecha de expiración
-## del token
-## tener una funcion ejecutandose que permita borrar tokens que han
-
-## pasado el tiempo de 3 minutos.
-
-
-## hacer un json o un javascript similar al del semestre pasado
-## que haga peticiones constantes a una URL que llame a la funcion
-## de verificacion de tiempo de los OTP
-
-def tiempo_otp(request):
-    """
-    Borra los OTP con más de 3 minutos de tiempo
-
-    Keyword Arguments:
-
-    return: JsonResponse
-    """
-    tiempo_actual = datetime.now()
-    for tiempo in models.OTP.objects.all():
-        tiempo_exp = tiempo.tiempo_exp
-        id_telegram = tiempo.id_telegram
-        otp = tiempo.otp
-        if tiempo_actual > tiempo_exp:
-            otp.delete()
-            id_telegram.delete()
-            tiempo_exp.delete()
-    return HttpResponse("Token expirado")
-
-
-
-
+    return True
 
 
 def verificar_codigo_otp(request):
     """
-    Verifica el código OTP almacenado en la sesión del navegador.
+    Verifica el código OTP almacenado en la base de datos
 
     Keyword Arguments:
-    request: HttpRequest, solicitud HTTP
+    request: HttpRequest
     returns: HttpResponse
     """
-    #chat_id = enviar_otp(request)
-    #print("chat_id =",chat_id)
-    #otp = request.session.get('otp')
 
-    ### hacer una bandera con el contador de las peticiones POST
-    ### si pasa de uno borrar el token de inicio de sesion
-    registrado = request.session.get('registrado', False)
-    if not registrado:
-        return redirect('/registro/')
+    contador = 0
+    errores = []
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
     else:
         chat_id_bd = request.POST.get('id_telegram','').strip()
         codigo_otp = request.POST.get('codigo_otp','').strip()
-        print("OTP form=",codigo_otp)
-        print("CHATID=",chat_id_bd)
-        tiempo_actual = datetime.now(timezone.utc) 
-        for codigo_t in models.OTP.objects.all():
-            id_tel = codigo_t.id_telegram
-            tiempo_exp = codigo_t.tiempo_exp
-            print("id_telegram for =",id_tel)
-            otp = codigo_t.otp
-            print("codigo_otp for =",otp)
-            if tiempo_actual > tiempo_exp:
-                #id_expirado = models.OTP.objects.filter('id_telegram'=id_telegram)
-                #otp_expirado = models.OTP.objects.filter('otp'=otp)
-                #time_expirado = models.OTP.objects.filter('tiempo_exp'=)
-                registros_expirados = models.OTP.objects.filter(id_telegram=id_tel, otp=otp, tiempo_exp=tiempo_exp)
-                print(registros_expirados)
-                registros_expirados.delete()
-                #id_expirado.delete()
-                #otp_expirado.delete()
-                #time_expirado.delete()
-                return HttpResponse("OTP expirado")
-            elif chat_id_bd == id_tel and codigo_otp == otp:
-                print("Chat ID funciona")
-                if codigo_otp == codigo_t.otp:
-                    return redirect('/inicio')
+        contador = 1
+        tiempo_actual = datetime.now(timezone.utc)
+        if validar_chat_id(request, chat_id_bd) == True:
+            for codigo_t in models.OTP.objects.all():
+                id_tel = codigo_t.id_telegram
+                tiempo_exp = codigo_t.tiempo_exp
+                otp = codigo_t.otp
+                if tiempo_actual > tiempo_exp:
+                    registros_expirados = models.OTP.objects.filter(id_telegram=id_tel, otp=otp, tiempo_exp=tiempo_exp)
+                    registros_expirados.delete()                    
+                    return HttpResponse("OTP expirado")
+                elif chat_id_bd == id_tel and codigo_otp == otp:
+                    models.OTP.objects.filter(otp=id_tel).delete()
+                    models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
+                    return redirect('/inicio/')
+                elif contador > 0:
+                    models.OTP.objects.filter(otp=otp).delete()
+                    return HttpResponse("Ya no tienes intentos") 
 
-                else:
-                    errores = []
-                    errores.append('El codigo es erroneo')
-                    return render(request,t,{'errores':errores})
+        elif validar_chat_id(request,chat_id_bd) == False and contador > 0:
+            errores.append('Chat id erroneo')
+            return render(request,t,{'errores':errores})
+
+    return HttpResponse("Token erroneo o ID erroneo, fin del Proceso de registro")
+
+def validar_chat_id(request,chat_id):
+    """
+    Valida el Chat id de la base de datos RegistroAdmin
+
+    Keyword Arguments:
+    chat_id : Id de telegram tomado de la funcion verificar_codigo_otp
+    returns: Regresa un bool, True y False
+    """
+    chat_id = chat_id
+    exists = models.RegistroAdmin.objects.filter(id_telegram=chat_id).exists()
+    print(exists)
+    return exists
+   
 
 def encriptar_password(secreto) -> string:
     """Cifra una cadena de contraseña con SHA256 y utilizando salt
@@ -412,7 +344,7 @@ def encriptar_password(secreto) -> string:
         String: Contraseña cifrada
     """
     salt = base64.b64encode(os.urandom(16)).decode('UTF-8')
-    cifrado = crypt.crypt(secreto, '$6' + salt )
+    cifrado = crypt.crypt(secreto, '$6$' + salt)
     return cifrado
 
 

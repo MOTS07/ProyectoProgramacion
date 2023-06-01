@@ -10,4 +10,4 @@ for linea in $(ccdecrypt -c "$archivo_env"); do
     export "${linea}";
 done
 
-python manage.py makemigrations
+python3 manage.py makemigrations

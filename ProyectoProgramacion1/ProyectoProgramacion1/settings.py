@@ -25,6 +25,18 @@ SECRET_KEY = os.environ.get('secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Establecer la configuración de la sesión
+SESSION_COOKIE_AGE = 600 # 30 minutos
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+# Configurar CSRF para formularios
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+
+
+
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS=['http://localhost:8000']

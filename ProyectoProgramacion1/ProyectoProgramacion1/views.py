@@ -30,6 +30,9 @@ def mandar_inicio(request) -> HttpResponse:
     request -- 
     returns: HttpResponse 
     """
+    logueado = request.session.get('logueado', False)
+    if not logueado:
+        return redirect('/registro/')
     return HttpResponse('Hola mundo')
 
 def recuperar_info_ip(ip:str) -> models.Intentos:
@@ -163,6 +166,7 @@ def identificar_usuario(request) -> HttpResponse:
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
             #enviar_otp(request) aqui debería mandar el otp para la autenticanción de dos pasos
+            request.session['logueado'] = True
             return redirect('/inicio/')
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
@@ -286,6 +290,9 @@ def verificar_codigo_otp(request):
     request: HttpRequest
     returns: HttpResponse
     """
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/registro/')
 
     contador = 0
     errores = []

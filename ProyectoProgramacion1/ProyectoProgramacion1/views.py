@@ -35,6 +35,20 @@ def mandar_inicio(request) -> HttpResponse:
         return redirect('/autenticacion/')
     return HttpResponse('Hola mundo')
 
+
+def logout_view(request) -> redirect:
+    """
+    Regresa a la pagina de inicio
+    
+    Keyword Arguments:
+    request --
+    returns: redirect
+    """
+    logout(request)
+    request.session.flush()
+    messages.info(request, "Saliste exitosamente")
+    return redirect('autenticacion/')
+
 def recuperar_info_ip(ip:str) -> models.Intentos:
     """
     Recupera información asociada a una ip, si la ip no existe se regresa una tupla vacía.

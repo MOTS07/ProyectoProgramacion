@@ -251,8 +251,7 @@ def verificar_codigo_otp(request):
                 otp = codigo_t.otp
                 if tiempo_actual > tiempo_exp:
                     registros_expirados = models.OTP.objects.filter(id_telegram=id_tel, otp=otp, tiempo_exp=tiempo_exp)
-                    registros_expirados.delete()
-                    borrar_bd(id_tel)
+                    registros_expirados.delete()                    
                     return HttpResponse("OTP expirado")
                 elif chat_id_bd == id_tel and codigo_otp == otp:
                     models.OTP.objects.filter(otp=id_tel).delete()
@@ -261,9 +260,9 @@ def verificar_codigo_otp(request):
                 elif contador > 0:
                     models.OTP.objects.filter(otp=otp).delete() 
 
-        elif validar_chat_id(request,chat_id) == False and contador > 0:
+        elif validar_chat_id(request,chat_id_bd) == False and contador > 0:
             errores.append('Chat id erroneo')
-            return render(request,template,{'errores':errores})
+            return render(request,t,{'errores':errores})
 
     return HttpResponse("Token erroneo o ID erroneo, fin del Proceso de registro")
 

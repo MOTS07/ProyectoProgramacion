@@ -30,10 +30,24 @@ def mandar_inicio(request) -> HttpResponse:
     request -- 
     returns: HttpResponse 
     """
-    logueado = request.session.get('registrado')
-    if not logueado:
-       return redirect('/registro/')
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/autenticacion/')
     return HttpResponse('Hola mundo')
+
+
+def logout_view(request) -> redirect:
+    """
+    Regresa a la pagina de inicio
+    
+    Keyword Arguments:
+    request --
+    returns: redirect
+    """
+    logout(request)
+    request.session.flush()
+    messages.info(request, "Saliste exitosamente")
+    return redirect('autenticacion/')
 
 def recuperar_info_ip(ip:str) -> models.Intentos:
     """
@@ -125,7 +139,6 @@ def credenciales(usuario,contra) -> bool:
         bool: True si se encuentra el usuario
     """
     try:
-        #usuario = models.RegistroAdmin.objects.get(nombre=usuario)
         usuario = models.RegistroAdmin.objects.get(nombre=usuario)
         #El usuario existe, ahora comparar contraseñas
         partes = usuario.contraseña.split('$')
@@ -157,27 +170,21 @@ def identificar_usuario(request) -> HttpResponse:
         errores = []
         usuario = request.POST.get('nombre','').strip()
         contra = request.POST.get('password','').strip()
-        id_telegram = request.POST.get('id_telegram','').strip()
 
         if puede_intentar_loguearse(request):
             if not usuario.strip() or not contra.strip():
                 errores.append('No se ingreso usuario o contraseña')
                 return render(request,template,{'errores':errores})
 
-            if validar_chat_id(request,id_telegram) == False:
-                errores.append('Chat ID erroneo')
-                return render(request,template,{'errores':errores})
-
             if not credenciales(usuario,contra):
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
-            enviar_otp(request,id_telegram) #Envia el OTP para la autenticion de dos pasos
-            #request.session['logueado'] = True
-            return redirect('/verificar/')
+            #enviar_otp(request) aqui debería mandar el otp para la autenticanción de dos pasos
+            request.session['registrado'] = True
+            return redirect('/inicio/')
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
-
-
+       
 
 def validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2,ip_server):
     errores = []
@@ -223,6 +230,7 @@ def formulario_usuarios(request):
             c = {'errores': errores}
             return render(request, t, c)
         else:
+            print(encriptar_password(contraseña))
             n_usuario = models.RegistroAdmin(nombre=nombre,
                                              correo=correo,
                                              id_telegram=id_telegram,
@@ -286,7 +294,6 @@ def enviar_otp(request,id_telegram):
     print(tiempo_exp)
     otp_bd = models.OTP(id_telegram=chat_id,otp=otp,tiempo_exp=tiempo_exp)
     otp_bd.save()
-    request.session['id_tel'] = chat_id
     return True
 
 
@@ -298,50 +305,42 @@ def verificar_codigo_otp(request):
     request: HttpRequest
     returns: HttpResponse
     """
+    registrado = request.session.get('registrado', False)
+    if not registrado:
+        return redirect('/registro/')
 
-    chat_id_bd = request.session.get('id_tel')
-    print(chat_id_bd)
     contador = 0
     errores = []
-
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
     else:
-        #chat_id_bd = request.POST.get('id_telegram','').strip()
+        chat_id_bd = request.POST.get('id_telegram','').strip()
         codigo_otp = request.POST.get('codigo_otp','').strip()
         contador = 1
         tiempo_actual = datetime.now(timezone.utc)
-
         if validar_chat_id(request, chat_id_bd) == True:
             for codigo_t in models.OTP.objects.all():
+                id_tel = codigo_t.id_telegram
                 tiempo_exp = codigo_t.tiempo_exp
                 otp = codigo_t.otp
-                telegram_id = codigo_t.id_telegram
-
                 if tiempo_actual > tiempo_exp:
-                    registros_expirados = models.OTP.objects.filter(id_telegram=telegram_id, otp=otp, tiempo_exp=tiempo_exp)
-                    registros_expirados.delete()
-                    return HttpResponse("OTP expirado 1")
-
-                elif telegram_id == chat_id_bd and codigo_otp == otp:
-                    models.OTP.objects.get(id_telegram=telegram_id).delete()
-                    #models.OTP.objects.filter(otp=codigo_otp).delete()
-                    #models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
-                    request.session['registrado'] = True
+                    registros_expirados = models.OTP.objects.filter(id_telegram=id_tel, otp=otp, tiempo_exp=tiempo_exp)
+                    registros_expirados.delete()                    
+                    return HttpResponse("OTP expirado")
+                elif chat_id_bd == id_tel and codigo_otp == otp:
+                    models.OTP.objects.filter(otp=id_tel).delete()
+                    models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
                     return redirect('/inicio/')
-
                 elif contador > 0:
-                    models.OTP.objects.get(id_telegram=chat_id_bd).delete()
-                    return HttpResponse("Token Erroneo")
+                    models.OTP.objects.filter(otp=otp).delete()
+                    return HttpResponse("Ya no tienes intentos") 
 
-        elif validar_chat_id(request,chat_id_bd) == False:
-            models.OTP.objects.get(id_telegram=chat_id_bd).delete()
-            return HttpResponse("Chat ID erroneo")
+        elif validar_chat_id(request,chat_id_bd) == False and contador > 0:
+            errores.append('Chat id erroneo')
+            return render(request,t,{'errores':errores})
 
     return HttpResponse("Token erroneo o ID erroneo, fin del Proceso de registro")
-
-         
 
 def validar_chat_id(request,chat_id):
     """
@@ -355,7 +354,6 @@ def validar_chat_id(request,chat_id):
     exists = models.RegistroAdmin.objects.filter(id_telegram=chat_id).exists()
     print(exists)
     return exists
-    
    
 
 def encriptar_password(secreto) -> string:

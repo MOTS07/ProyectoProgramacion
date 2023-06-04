@@ -22,32 +22,30 @@
 {% endif %}
 
 {% csrf_token %}
+
 <div class="container">
-        <div class="row text-center login-page">
-           <div class="col-md-12 login-form">
-              <form class="form-login" action="/autenticacion/" method="POST">
-                   {% csrf_token %}
-                 <div class="row">
-                    <div class="col-md-12 login-form-header">
-                       <h5 class="login-form-font-header">Ingresa tus credenciales</h5>
-                    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Ingresa tus credenciales</h5>
+                    <form class="form-login" action="/autenticacion/" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input class="form-control" name="nombre" type="text" placeholder="Nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <input class="form-control" name="id_telegram" type="text" placeholder="ID Telegram" required>
+                        </div>
+                        <div class="mb-3">
+                            <input class="form-control" name="password" type="password" placeholder="Contraseña" required>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Entrar</button>
+                    </form>
                 </div>
-                <div class="row">
-                   <div class="col-md-12 login-from-row">
-                      <input class="controls" name="nombre" type="text" placeholder="Nombre" required/>
-                   </div>
-                </div>
-                <div class="row">
-                   <div class="col-md-12 login-from-row">
-                      <input class="controls" name="password" type="password" placeholder="Contraseña" required/>
-                   </div>
-                </div>
-                <div class="row">
-                   <div class="col-md-12 login-from-row">
-                      <button class="btn btn-info">Entrar</button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
+    </div>
+</div>
 </html>
 {% endblock %}

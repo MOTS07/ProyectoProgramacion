@@ -46,7 +46,7 @@ def recuperar_info_ip(ip:str) -> models.Intentos:
     try:
         registro = models.Intentos.objects.get(ip=ip)
         return  registro 
-    except:
+    except Exception as error:
         return None
 
 
@@ -125,9 +125,7 @@ def credenciales(usuario,contra) -> bool:
         bool: True si se encuentra el usuario
     """
     try:
-        #usuario = models.RegistroAdmin.objects.get(nombre=usuario)
-        usuario = models.RegistroAdmin.objects.get(nombre=usuario)
-        #El usuario existe, ahora comparar contraseñas
+        usuario = models.RegistroAdmin.objects.get(nombre=usuario) #El usuario existe, ahora comparar contraseñas
         partes = usuario.contraseña.split('$')
         salt = '$' + partes[1] + '$' + partes[2]
         contra_cifrada = crypt.crypt(contra, salt)
@@ -251,7 +249,6 @@ def otp_time(request) -> HttpResponse:
     request.session['opt'] = otp
     tiempo_inicio = time.time()
     tiempo_limite = tiempo_inicio + 180
-    #chat_id = [] ##Tomarlo desde la base de datos
     
     enviar_otp(otp)
     while True:
@@ -302,13 +299,11 @@ def verificar_codigo_otp(request):
     chat_id_bd = request.session.get('id_tel')
     print(chat_id_bd)
     contador = 0
-    errores = []
 
     t = "verificar.html"
     if request.method == 'GET':
         return render(request,t)
-    else:
-        #chat_id_bd = request.POST.get('id_telegram','').strip()
+    else:        
         codigo_otp = request.POST.get('codigo_otp','').strip()
         contador = 1
         tiempo_actual = datetime.now(timezone.utc)
@@ -326,8 +321,6 @@ def verificar_codigo_otp(request):
 
                 elif telegram_id == chat_id_bd and codigo_otp == otp:
                     models.OTP.objects.get(id_telegram=telegram_id).delete()
-                    #models.OTP.objects.filter(otp=codigo_otp).delete()
-                    #models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
                     request.session['registrado'] = True
                     return redirect('/inicio/')
 
@@ -343,7 +336,7 @@ def verificar_codigo_otp(request):
 
          
 
-def validar_chat_id(request,chat_id):
+def validar_chat_id(chat_id):
     """
     Valida el Chat id de la base de datos RegistroAdmin
 

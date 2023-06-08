@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  terminal:
+    environment:
+      USER: cesart #${USER}
+      PASS: 263013 #${PASS}
+    build: .
+    restart: always
+    container_name: terminal
+    ports:
+      - 6767:7681
+        #      - 22:22
+    networks:
+      - terminal
+      - default
+
+
+
+        #  otro:
+        # networks:
+        #- default
+
+networks:
+  terminal:
+    external: true
+

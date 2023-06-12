@@ -173,7 +173,7 @@ def identificar_usuario(request) -> HttpResponse:
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
             enviar_otp(request,id_telegram) #Envia el OTP para la autenticion de dos pasos
-            #request.session['logueado'] = True
+            request.session['registrado'] = True
             return redirect('/verificar/')
         else:
             return render(request, template, {'errores': ['Ya no tienes intentos, espera unos minutos']})
@@ -230,9 +230,7 @@ def formulario_usuarios(request):
                                              contraseña=encriptar_password(contraseña),
                                              ip_server=ip_server)
             n_usuario.save()
-            #enviar_otp(request, id_telegram) #solo se registra, el otp es para el login
-            request.session['registrado'] = True
-            return redirect('/inicio/')
+            return redirect('/autenticacion/')
 
 
 
@@ -278,11 +276,13 @@ def verificar_codigo_otp(request):
     request: HttpRequest
     returns: HttpResponse
     """
+    registrado = request.session.get('registrado')
+    if not registrado:
+       return redirect('/autenticacion/')
 
     chat_id_bd = request.session.get('id_tel')
     print(chat_id_bd)
     contador = 0
-    errores = []
 
     t = "verificar.html"
     if request.method == 'GET':
@@ -308,7 +308,7 @@ def verificar_codigo_otp(request):
                     models.OTP.objects.filter(id_telegram=telegram_id).delete()
                     #models.OTP.objects.filter(otp=codigo_otp).delete()
                     #models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
-                    request.session['registrado'] = True
+                    request.session['logueado'] = True
                     return redirect('/monitoreo/')
 
                 elif contador > 0:
@@ -354,6 +354,9 @@ def encriptar_password(secreto) -> string:
 
 
 def redireccionar(request):
+    logueado = request.session['logueado']
+    if not logueado:
+        return redirect('/autenticacion/')
     ip_server = request.session.get('IP_server')
     url = 'http://' + ip_server + ':6767'
     return redirect(url)
@@ -361,6 +364,9 @@ def redireccionar(request):
 
 
 def estado_servidor(request):
+    logueado = request.session['logueado']
+    if not logueado:
+        return redirect('/autenticacion/')
     t='monitoreo.html'
     d={'list':models.RegistroAdmin.objects.all()}
     return render(request,t,d)
@@ -388,5 +394,14 @@ def recuperar_server(request):
     request -- 
     returns: JsonResponse
     """
+    logueado = request.session['logueado']
+    if not logueado:
+        return redirect('/autenticacion/')
     servidores = models.RegistroAdmin.objects.all()
     return JsonResponse(serializar_server(servidores), safe=False)
+
+def cerrar_sesion(request):
+    request.session['logueado'] = False
+    request.session.flush()
+    return redirect('/autenticacion/')
+    

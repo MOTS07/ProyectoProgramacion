@@ -26,5 +26,5 @@ urlpatterns = [
     path('server/',views.redireccionar),
     path('monitoreo/',views.estado_servidor),
     path('monitorizacion/', views.recuperar_server),
-#path('logout/', logout_view, name='logout'),
+    path('logout/', views.cerrar_sesion),
 ]

@@ -150,6 +150,7 @@ def identificar_usuario(request) -> HttpResponse:
     request -- 
     returns: HttpResponse 
     """
+
     template = 'login.html'
     if request.method == 'GET':
         return render(request, template)
@@ -235,35 +236,6 @@ def formulario_usuarios(request):
 
 
 
-
-def otp_time(request) -> HttpResponse:
-    """
-    Realiza la generacion del Codigo OTP, lo almacena en la sesion y contabiliza el tiempo
-    hasta 3 minutos para cerrar el proceso de registro.
-
-    Keyword Arguments:
-    request: request, página de verificacion OTP
-    returns: HttpResponse
-    """
-    t = 'verificar.html'
-    errores = []
-    otp = ''.join(random.choices(string.digits, k=6))
-    request.session['opt'] = otp
-    tiempo_inicio = time.time()
-    tiempo_limite = tiempo_inicio + 180
-    #chat_id = [] ##Tomarlo desde la base de datos
-    
-    enviar_otp(otp)
-    while True:
-        tiempo_actual = time.time()
-        tiempo_restante = tiempo_limite - tiempo_actual
-
-        if tiempo_restante <= 0:
-            errores.append('El codigo OTP ha expirado')
-            return render(request,t,{'errores':errores})
-        
-
-
 def enviar_otp(request,id_telegram):
     """
     Envia el codigo OPT, verifica el chat_id del usuario y
@@ -275,7 +247,6 @@ def enviar_otp(request,id_telegram):
     returns: chat_id, lo utiliza la funcion de verificar_codigo_otp
 
     """
-    request = request
     chat_id = id_telegram
     print("URL",chat_id)
     TOKEN = "6186600289:AAHuTujstEwq93x7oR8zmAjsoWLw1AjyeHY"
@@ -286,8 +257,17 @@ def enviar_otp(request,id_telegram):
     print(tiempo_exp)
     otp_bd = models.OTP(id_telegram=chat_id,otp=otp,tiempo_exp=tiempo_exp)
     otp_bd.save()
+    #Guarda la Ip en la session, funciona para conectarse al SSH
+    ip_server(request,chat_id)
     request.session['id_tel'] = chat_id
     return True
+
+def ip_server(request,chat_id):
+    for ip in models.RegistroAdmin.objects.all():
+        id_telegram= ip.id_telegram
+        ip_server= ip.ip_server
+        if chat_id==id_telegram:
+            request.session['IP_server']=ip_server
 
 
 def verificar_codigo_otp(request):
@@ -325,18 +305,18 @@ def verificar_codigo_otp(request):
                     return HttpResponse("OTP expirado 1")
 
                 elif telegram_id == chat_id_bd and codigo_otp == otp:
-                    models.OTP.objects.get(id_telegram=telegram_id).delete()
+                    models.OTP.objects.filter(id_telegram=telegram_id).delete()
                     #models.OTP.objects.filter(otp=codigo_otp).delete()
                     #models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
                     request.session['registrado'] = True
-                    return redirect('/inicio/')
+                    return redirect('/monitoreo/')
 
                 elif contador > 0:
-                    models.OTP.objects.get(id_telegram=chat_id_bd).delete()
+                    models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
                     return HttpResponse("Token Erroneo")
 
         elif validar_chat_id(request,chat_id_bd) == False:
-            models.OTP.objects.get(id_telegram=chat_id_bd).delete()
+            models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
             return HttpResponse("Chat ID erroneo")
 
     return HttpResponse("Token erroneo o ID erroneo, fin del Proceso de registro")
@@ -373,4 +353,40 @@ def encriptar_password(secreto) -> string:
 
 
 
+def redireccionar(request):
+    ip_server = request.session.get('IP_server')
+    url = 'http://' + ip_server + ':6767'
+    return redirect(url)
 
+
+
+def estado_servidor(request):
+    t='monitoreo.html'
+    d={'list':models.RegistroAdmin.objects.all()}
+    return render(request,t,d)
+
+
+#Cambiarlo a que apunte al registro RegistroAdmin para que obtenga
+#la direccionIP y la serialice junto con la fecha y muestre la URL
+# de monitorizacion 
+# Mejor hacerlo con un for XD
+
+def serializar_server(servidores):
+    resultado = []
+    for datos in servidores:
+        url = 'http://' + datos.ip_server + ':6767'
+        #determinar_server(serv)
+        d_server = {'Admin':datos.nombre, 'DireccionIP' :datos.ip_server, 'url' : datos.ip_server }
+        resultado.append(d_server)
+    return resultado
+
+def recuperar_server(request):
+    """
+    Agrega los datos del servidor en la URL monitorizacion.
+
+    Keyword Arguments:
+    request -- 
+    returns: JsonResponse
+    """
+    servidores = models.RegistroAdmin.objects.all()
+    return JsonResponse(serializar_server(servidores), safe=False)

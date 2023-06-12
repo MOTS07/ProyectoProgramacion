@@ -23,5 +23,8 @@ urlpatterns = [
     path('inicio/',views.mandar_inicio),
     path('registro/',views.formulario_usuarios),
     path('verificar/',views.verificar_codigo_otp),
-    #path('logout/', logout_view, name='logout'),
+    path('server/',views.redireccionar),
+    path('monitoreo/',views.estado_servidor),
+    path('monitorizacion/', views.recuperar_server),
+#path('logout/', logout_view, name='logout'),
 ]

@@ -354,7 +354,7 @@ def encriptar_password(secreto) -> string:
 
 
 def redireccionar(request):
-    logueado = request.session['logueado']
+    logueado = request.session.get('logueado')
     if not logueado:
         return redirect('/autenticacion/')
     ip_server = request.session.get('IP_server')
@@ -364,7 +364,7 @@ def redireccionar(request):
 
 
 def estado_servidor(request):
-    logueado = request.session['logueado']
+    logueado = request.session.get('logueado')
     if not logueado:
         return redirect('/autenticacion/')
     t='monitoreo.html'
@@ -394,7 +394,7 @@ def recuperar_server(request):
     request -- 
     returns: JsonResponse
     """
-    logueado = request.session['logueado']
+    logueado = request.session.get('logueado')
     if not logueado:
         return redirect('/autenticacion/')
     servidores = models.RegistroAdmin.objects.all()

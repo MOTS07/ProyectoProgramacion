@@ -4,7 +4,7 @@ $(document).ready(function() {
 			if (status == "success"){
 			lista = "";
 		for(var i=0; i< data.length; i++){
-            lista += "<tr>"+"<td>"+data[i].Admin+"</td>"+"<td>"+data[i].DireccionIP+"</td>"+"<td><a href='/server/'>" + "Conectar a Shell" + "<a/></td>"
+            lista += "<tr>"+"<td>"+data[i].Admin+"</td>"+"<td>"+data[i].DireccionIP+"</td>"+"<td><a href='http://" + data[i].DireccionIP + ":6767'>" + "Conectarse a shell" + "<a/></td>"
 			}
 				$("#datos").html(lista);
 			}

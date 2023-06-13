@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from bd import models 
 from datetime import timezone
 
+import re
 import random
 import string
 import time
@@ -230,7 +231,7 @@ def formulario_usuarios(request):
                                              contraseña=encriptar_password(contraseña),
                                              ip_server=ip_server)
             n_usuario.save()
-            return redirect('/autenticacion/')
+            return redirect('/monitoreo/')
 
 
 

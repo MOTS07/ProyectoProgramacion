@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block titulo %}Registro{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+
+{% block encabezado %}Registro de servidores{% endblock %}
+
+{% block contenido %}
+{% if errores %}
+
+<div class="text-danger">
+  <ul>
+    {% for error in errores %}
+       <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endif %}
+
+<form id="formulario" action="/servidor/" method="POST"> 
+  {% csrf_token %}
+  <fieldset>
+    <legend>Registro de Servidores Nuevos</legend>
+    <div class="form-group" class="fila">
+
+      <div>
+	<label for="hostname">Hostname:</label>
+      </div>
+
+      <div>
+	<input type="text" name="hostname" id="hostname"  placeholder="Ingresa tu hostname">
+      </div>
+      
+    </div>
+
+    <div class="form-group" class="fila">
+        <div>
+      <label for="direccion">Direccion_IP:</label>
+        </div>
+  
+        <div>
+      <input type="text" name="direccion" id="direccion"  placeholder="Ingresa la direccion IP">
+        </div>
+      </div>
+
+    <div class="form-group" class="fila">
+      <div>
+	<label for="password">Password:</label>
+      </div>
+
+      <div>
+	<input type="password" name="password" id="password"  placeholder="Ingresa tu password">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Registrar</button>
+    
+  </fieldset>
+</form>
+
+{% endblock %}

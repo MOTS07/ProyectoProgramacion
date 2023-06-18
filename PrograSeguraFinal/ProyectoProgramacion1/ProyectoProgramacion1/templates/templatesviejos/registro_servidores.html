@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Registro Server{% endblock %}
+
+{% block encabezado %}Registro de servidores{% endblock %}
+
+{% block contenido %}
+  {% if errores %}
+    <div class="alert alert-danger">
+      <ul>
+        {% for error in errores %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <form id="formulario" action="/regserver/" method="POST"> 
+          {% csrf_token %}
+          <fieldset>
+            <legend>Registro de Servidores Nuevos</legend>
+
+            <div class="form-group">
+              <label for="server_name" style="font-size: 18px;">Hostname:</label>
+              <input type="text" name="server_name" id="server_name" class="form-control" style="font-size: 18px;" placeholder="Ingresa tu hostname">
+            </div>
+
+            <div class="form-group">
+              <label for="ip" style="font-size: 18px;">Dirección IP:</label>
+              <input type="text" name="ip" id="ip" class="form-control" style="font-size: 18px;" placeholder="Ingresa la dirección IP">
+            </div>
+
+            <div class="form-group">
+              <label for="ram" style="font-size: 18px;">RAM:</label>
+              <input type="text" name="ram" id="ram" class="form-control" style="font-size: 18px;" placeholder="Cantida de memoria RAM del servidor">
+            </div>
+
+            <div class="form-group">
+              <label for="cpu" style="font-size: 18px;">Sistema Operativo:</label>
+              <input type="text" name="cpu" id="cpu" class="form-control" style="font-size: 18px;" placeholder="SO">
+            </div>
+
+            <div class="form-group">
+              <label for="cpu" style="font-size: 18px;">Capacidad disco:</label>
+              <input type="text" name="disco" id="disco" class="form-control" style="font-size: 18px;" placeholder="Capacidad disco: 500GB, 1TB, etc...">
+            </div>
+
+            <button type="submit" class="btn btn-success">Registrar</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

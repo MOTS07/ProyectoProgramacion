@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block titulo %} Lista de Servidores {% endblock %}
+{% block encabezado %}Monitoreo de servidores{% endblock %}
+
+
+{% block scripts %}
+<script src="/static/js/chatAjax.js"></script>
+{% endblock %}
+
+
+{% block contenido %}
+<div class="table-responsive">
+  <table class="table table-dark">
+    <thead>
+      <tr>
+        <th>Admin</th>
+        <th>Direccion IP</th>
+        <th>URL</th>
+        </tr>
+    </thead>
+    <tbody id="datos"></tbody>
+  </table>
+</div>
+{% endblock %}
+

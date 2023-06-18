@@ -1,0 +1,54 @@
+{% extends 'baseAdmin.html' %}
+{% block titulo %}Edicion{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+
+{% block encabezado %}EDICION DE ADMINISTRADORES{% endblock %}
+{% block nav %}{% include 'nav_aut.html' %}{% endblock %}
+
+{% block contenido %}
+
+{% if errores %}
+
+<div class="text-danger">
+  <ul>
+    {% for error in errores %}
+       <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endif %}
+
+<form action="{% url 'editarUsuario' RegistroAdmin.id %}" method="POST">
+    {% csrf_token %}
+    <div class="container">
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" name="nombre" id="nombre" value="{{RegistroAdmin.nombre}}"  required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="correo" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" name="correo" id="correo" value="{{RegistroAdmin.correo}}" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="numero" class="form-label">ID telegram</label>
+              <input type="tel" class="form-control" name="id_telegram"  id="id_telegram" value="{{RegistroAdmin.id_telegram}}" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="contrasena" class="form-label">Contraseña</label>
+              <input type="text" class="form-control" name="contraseña" id="contraseña" value="{{RegistroAdmin.contraseña}}" required>
+            </div>
+            
+            <a class="btn btn-warning" href="/dashboard_admin/">Regresar</a>
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  
+{% endblock %}

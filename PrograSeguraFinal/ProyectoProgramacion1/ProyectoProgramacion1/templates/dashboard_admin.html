@@ -1,0 +1,42 @@
+{% extends 'baseAdmin.html' %}
+
+{% block titulo %}Administrador{% endblock %}
+
+{%block scripts %}
+
+{% endblock %}
+
+{% block encabezado %}Dashboard Administradores{% endblock %}
+
+{% block nav %}{% include 'nav_aut.html' %}{% endblock %}
+
+{% block contenido %}
+
+<div class="d-grid">
+    <a class="btn btn-primary btn-block" href="/registro/" >Registrar Administrador</a>
+</div>
+
+<div class="card card-body">
+    <center><table class="table table-sm table-striped table-bordered">
+        <tr>
+            <th>Nombre</th>
+            <th>Correo Electronico</th>
+            <th>ID Telegram</th>
+            <!--<th>Contraseña</th>-->
+            <th>Update</th>
+            <th>Remove</th>
+        </tr>
+        {% for admin in RegistroAdmin %}
+        <tr>
+            <td>{{admin.nombre}}</td>
+            <td>{{admin.correo}}</td>
+            <td>{{admin.id_telegram}}</td>
+            <!--<td>{{admin.contraseña}}</td>-->
+            <td><a class="btn btn-info" href="{% url 'editarUsuario' admin.id %}">Actualizar</a></td>
+            <td><a class="btn btn-danger" href="{% url 'eliminarUsuario' admin.id %}">Eliminar</a></td>
+        </tr>
+        {% endfor %}
+    </table></center>
+</div>
+
+{% endblock %}

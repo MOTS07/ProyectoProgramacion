@@ -1,0 +1,33 @@
+{% extends 'baseAdmin.html' %}
+
+{% block titulo %}Servidor{% endblock %}
+
+{%block scripts %}
+
+{% endblock %}
+
+{% block encabezado %}AVISO DE ELIMINACION{% endblock %}
+
+{% block nav %}{% include 'nav_aut.html' %}{% endblock %}
+
+{% block contenido %}
+
+<div>
+    <p class="card card-body bg-danger">¿Estas seguro de borrar este servidor?</p>
+    <div>
+    <center><table class="table table-sm table-striped table-bordered">
+        <tr>
+            <td>{{Servidores.ip}}</td>
+            <td>{{Servidores.server_name}}</td>
+        </tr>
+    </table></center>
+</div>
+    <form method="POST">
+        <center><div>
+            {% csrf_token %}
+            <a class="btn btn-warning" href="/dashboard_server/">Regresar</a>
+            <button type="submit" class="btn btn-danger">Eliminar</button>
+        </div></center>
+    </form>
+</div>
+{% endblock %}

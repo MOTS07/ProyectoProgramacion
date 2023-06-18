@@ -373,18 +373,25 @@ def estado_servidor(request):
     return render(request,t,d)
 
 
-#Cambiarlo a que apunte al registro RegistroAdmin para que obtenga
-#la direccionIP y la serialice junto con la fecha y muestre la URL
-# de monitorizacion 
-# Mejor hacerlo con un for XD
+def cerrar_sesion(request):
+    request.session['logueado'] = False
+    request.session.flush()
+    return redirect('/autenticacion/')
 
-def serializar_server(servidores):
+
+
+def serializar_server(usuario,servidores, asociado):
     resultado = []
-    for datos in servidores:
-        url = 'http://' + datos.ip_server + ':6767'
-        #determinar_server(serv)
-        d_server = {'Admin':datos.nombre, 'DireccionIP' :datos.ip_server, 'url' : datos.ip_server }
-        resultado.append(d_server)
+    servidores_usuario = []
+    for admin in asociado:
+        if usuario == admin.nombre_registro_admin:
+            ip_servidor = admin.ip_servidor
+            servidores_usuario.append(ip_servidor)
+
+    for servidor in servidores:
+        if servidor.ip in servidores_usuario:
+            d_server = {'Admin':usuario,'IP':servidor.ip,'Hostname':servidor.server_name}
+            resultado.append(d_server)
     return resultado
 
 def recuperar_server(request):
@@ -392,17 +399,18 @@ def recuperar_server(request):
     Agrega los datos del servidor en la URL monitorizacion.
 
     Keyword Arguments:
-    request -- 
+    request --
     returns: JsonResponse
     """
+    usuario = request.session.get('user')
     logueado = request.session.get('logueado')
     if not logueado:
         return redirect('/autenticacion/')
-    servidores = models.RegistroAdmin.objects.all()
-    return JsonResponse(serializar_server(servidores), safe=False)
+    servidores = models.Servidores.objects.all()
+    asociado = models.Asociado.objects.all()
+    return JsonResponse(serializar_server(usuario,servidores,asociado), safe=False)
 
-def cerrar_sesion(request):
-    request.session['logueado'] = False
-    request.session.flush()
-    return redirect('/autenticacion/')
-    
+
+
+
+

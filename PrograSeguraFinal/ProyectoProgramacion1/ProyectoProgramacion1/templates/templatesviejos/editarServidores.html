@@ -1,0 +1,27 @@
+{% extends 'baseAdmin.html' %}
+{% block titulo %}Edicion{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+
+{% block encabezado %}EDICION DE SERVIDORES{% endblock %}
+{% block nav %}{% include 'nav_aut.html' %}{% endblock %}
+
+{% block contenido %}
+<form action="{% url 'editarServer' Servidores.id %}" method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="direccion_ip" class="form-label">Direccion IP</label>
+        <input type="text" class="form-control" name="ip" id="ip" value="{{Servidores.ip}}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="nombre_servidor" class="form-label">Nombre del servidor</label>
+        <input type="text" class="form-control" name="server_name" id="server_name" value="{{Servidores.server_name}}" required>
+      </div>
+  
+      <a class="btn btn-warning" href="/dashboard_server/">Regresar</a>
+      <button type="submit" class="btn btn-success">Guardar Cambios</button>
+  </form>
+  
+{% endblock %}

@@ -1,11 +1,11 @@
-{% extends 'baseAuth.html' %}
+{% extends 'baseAdmin.html' %}
 {% block titulo %}Registro{% endblock %}
 
 {%block scripts %}
 {% endblock %}
 
-{% block encabezado %}Registro de Servidores{% endblock %}
-
+{% block encabezado %}Registro de Administradores{% endblock %}
+{% block nav %}{% include 'nav_aut.html' %}{% endblock %}
 {% block contenido %}
 {% if errores %}
 
@@ -16,6 +16,8 @@
     {% endfor %}
   </ul>
 </div>
+
+
 
 {% endif %}
 
@@ -51,13 +53,11 @@
             <label for="confirmar-contrasena" class="form-label">Confirmar Contraseña</label>
             <input type="password" class="form-control" name="contraseña2" id="contraseña2" placeholder="Repite tu contraseña" required>
           </div>
-
-         <div class="mb-3">
-            <label for="confirmar-contrasena" class="form-label">Server IP</label>
-            <input type="text" class="form-control" name="ip_server" id="ip_server" placeholder="Repite tu contraseña" required>
-          </div>
-                    
-          <button type="submit" class="btn btn-primary">Registrar</button>
+          
+          <center><div>
+              <a class="btn btn-warning" href="/dashboard_admin/">Regresar</a>
+              <button type="submit" class="btn btn-primary">Registrar</button>
+          </div></center>
         </form>
       </div>
     </div>

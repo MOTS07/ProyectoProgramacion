@@ -6,6 +6,8 @@
 
 {% endblock %}
 
+
+
 {% block encabezado %}Dashboard Asociados{% endblock %}
 
 {% block nav %}{% include 'nav_aut.html' %}{% endblock %}
@@ -13,41 +15,44 @@
 {% block contenido %}
 
 <h1>Asociar Servidor</h1>
-    <form method="POST" action="{% url 'asociar_servidor' %}">
-        {% csrf_token %}
+<form method="POST" action="{% url 'asociar_servidor' %}">
+    {% csrf_token %}
+    <div class="form-group">
         <label for="registro_admin">Registro Admin:</label>
-        <select name="registro_admin" id="registro_admin">
+        <select name="registro_admin" id="registro_admin" class="form-control">
             {% for registro_admin in registros_admin %}
                 <option value="{{ registro_admin.id }}">{{ registro_admin.nombre }}</option>
             {% endfor %}
         </select>
-        <br>
+    </div>
+    <div class="form-group">
         <label for="servidor">Servidor:</label>
-        <select name="servidor" id="servidor">
+        <select name="servidor" id="servidor" class="form-control">
             {% for servidor in servidores_disponibles %}
                 <option value="{{ servidor.id }}">{{ servidor.server_name }} ({{ servidor.ip }})</option>
             {% endfor %}
         </select>
-        <br>
-        <button type="submit">Asociar</button>
-    </form>
+    </div>
+    <button type="submit" class="btn btn-primary">Asociar</button>
+</form>
 
-    <h2>Asociaciones:</h2>
-    <table>
-        <thead>
+<h2>Asociaciones:</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Registro Admin</th>
+            <th>Servidor</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for asociado in asociados %}
             <tr>
-                <th>Registro Admin</th>
-                <th>Servidor</th>
+                <td>{{ asociado.nombre_registro_admin }}</td>
+                <td>{{ asociado.ip_servidor }}</td>
             </tr>
-        </thead>
-        <tbody>
-            {% for asociado in asociados %}
-                <tr>
-                    <td>{{ asociado.nombre_registro_admin }}</td>
-                    <td>{{ asociado.ip_servidor }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        {% endfor %}
+    </tbody>
+</table>
 
-    {% endblock %}
+{% endblock %}
+

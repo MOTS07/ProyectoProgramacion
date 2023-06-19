@@ -5,6 +5,10 @@ from bd import models
 from datetime import timezone
 from django.urls import reverse
 from django.contrib import messages
+from django.http import HttpRequest
+
+
+from flask import Flask, request
 
 import re
 import random
@@ -653,6 +657,38 @@ def logoutAdmin(request):
 
 
 
+def servidor_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+
+
+def recuperar_ip(request):
+    servidores = models.Servidores.objects.all()
+    dir = servidor_ip(request)
+    for servidor in servidores:
+        if dir == servidor.ip:
+            cpu = request.GET.get('cpu')
+            mem = request.GET.get('mem')
+            disk = request.GET.get('disk')
+            print(cpu, mem, disk)
+            
+            servidor.cpu = cpu
+            servidor.ram = mem
+            servidor.disco = disk
+            servidor.save()
+            return HttpResponse("Ok")
+
+
+    return HttpResponse("False")
+
+
+
 
 #Serializar Servidores --  Para redireccion a shell 
 
@@ -666,7 +702,7 @@ def serializar_server(usuario,servidores, asociado):
 
     for servidor in servidores:
         if servidor.ip in servidores_usuario:
-            d_server = {'Admin':usuario,'IP':servidor.ip,'Hostname':servidor.server_name}
+            d_server = {'Admin':usuario,'IP':servidor.ip,'Hostname':servidor.server_name, 'Ram': servidor.ram, 'Cpu': servidor.cpu, 'Disco': servidor.disco}
             resultado.append(d_server)
     return resultado
 

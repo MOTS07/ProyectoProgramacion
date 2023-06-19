@@ -36,4 +36,5 @@ urlpatterns = [
     path('eliminar_server/<id>', views.eliminarServer, name="eliminarServer"),
     path('editar_server/<id>', views.editarServer, name="editarServer"),
     path('asociar-servidor/', views.asociar_servidor, name='asociar_servidor'),
+    path('peticiones/', views.recuperar_ip),
 ]

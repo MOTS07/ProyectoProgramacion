@@ -39,7 +39,7 @@ CSRF_COOKIE_SAMESITE = 'Strict'
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS=['https://localhost']
+CSRF_TRUSTED_ORIGINS=['https://sewky.com.mx']
 # Application definition
 
 INSTALLED_APPS = [

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.http import HttpRequest
 
 
-from flask import Flask, request
+#from flask import Flask, request
 
 import re
 import random
@@ -180,7 +180,7 @@ def identificar_usuario(request) -> HttpResponse:
                 errores.append('Usuario o Contraseña invalidos')
                 return render(request,template,{'errores':errores})
             enviar_otp(request,id_telegram) #Envia el OTP para la autenticion de dos pasos
-            request.session['registrado'] = True
+            request.session['verificando'] = True
             request.session['user'] = usuario
             return redirect('/verificar/')
         else:
@@ -232,6 +232,9 @@ def dashboard_admins(request):
     """
     Funcion para mostrar los usuarios administradores
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'dashboard_admin.html'
     if request.method == 'GET':
         RegistroAdmin = models.RegistroAdmin.objects.all()
@@ -290,6 +293,9 @@ def eliminarUsuario(request,id):
     """
     Elimna un usuario de la base de datos
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'aviso.html'
     RegistroAdmin = models.RegistroAdmin.objects.get(id=id)
     if request.method == 'GET':
@@ -303,6 +309,9 @@ def editar_usuario(request,id):
     """
     Edita un usuario mediante la consulta de su modelo
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'editarUsuario.html'
     RegistroAdmin = models.RegistroAdmin.objects.get(id=id)
     if request.method == 'GET':
@@ -319,10 +328,11 @@ def editar_usuario(request,id):
         contraseña_nueva = request.POST['contraseña']
 
         if contraseña_nueva != contraseña_original:
+            if not validar_contraseña(contraseña_nueva):
+                return HttpResponse("La contraseña no cumple con los requisitos")
             contraseña_encriptada = encriptar_password(contraseña_nueva)
             RegistroAdmin.contraseña = contraseña_encriptada
         
-        contraseña1 = RegistroAdmin.contraseña
         RegistroAdmin.save()
         return redirect('/dashboard_admin/')
 
@@ -332,6 +342,9 @@ def eliminarServer(request,id):
     """
     Elimina un servidor de la base de datos
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'avisoServidores.html'
     Servidores = models.Servidores.objects.get(id=id)
     if request.method == 'GET':
@@ -345,6 +358,9 @@ def editarServer(request,id):
     """
     Edita un servidor de la base de datos
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'editarServidores.html'
     Servidores = models.Servidores.objects.get(id=id)
     if request.method == 'GET':
@@ -381,6 +397,12 @@ def formulario_usuarios(request):
     request: request, página del formulario de usuarios
     returns: render(request)
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     t='registro.html'
     if request.method == 'GET':
         return render(request, t)
@@ -391,7 +413,6 @@ def formulario_usuarios(request):
         id_telegram = request.POST.get('id_telegram','').strip()
         contraseña = request.POST.get('contraseña','').strip()
         contraseña2 = request.POST.get('contraseña2','').strip()
-        #ip_server = request.POST.get('ip_server','').strip()
         errores = validar_usuarios(nombre,correo,id_telegram,contraseña,contraseña2)
 
         if errores:
@@ -433,6 +454,9 @@ def dashboard_servers(request):
     """
     Funcion para mostrar los servidores actuales
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'dashboard_server.html'
     if request.method == 'GET':
         Servidores = models.Servidores.objects.all()
@@ -446,6 +470,9 @@ def formulario_servidores(request):
     request: request, página del formulario de server
     returns: render(request)
     """
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     t='registro_server.html'
     if request.method == 'GET':
         return render(request, t)
@@ -468,6 +495,9 @@ def formulario_servidores(request):
 
 
 def asociar_servidor(request):
+    registrado_admin = request.session.get('registrado_admin')
+    if not registrado_admin:
+        return redirect('/loginAdmin/')
     template = 'asociar_servidor.html'
     asociados = models.Asociado.objects.all()
     registros_admin = models.RegistroAdmin.objects.all()
@@ -546,8 +576,8 @@ def verificar_codigo_otp(request):
     request: HttpRequest
     returns: HttpResponse
     """
-    registrado = request.session.get('registrado')
-    if not registrado:
+    verificando = request.session.get('verificando')
+    if not verificando:
        return redirect('/autenticacion/')
 
     chat_id_bd = request.session.get('id_tel')
@@ -578,7 +608,7 @@ def verificar_codigo_otp(request):
                     models.OTP.objects.filter(id_telegram=telegram_id).delete()
                     #models.OTP.objects.filter(otp=codigo_otp).delete()
                     #models.OTP.objects.filter(id_telegram=chat_id_bd).delete()
-                    request.session['logueado'] = True
+                    request.session['admin'] = True
                     return redirect('/monitoreo/')
 
                 elif contador > 0:
@@ -634,8 +664,8 @@ def redireccionar(request):
 
 
 def estado_servidor(request):
-    logueado = request.session.get('logueado')
-    if not logueado:
+    admin = request.session.get('admin')
+    if not admin:
         return redirect('/autenticacion/')
     t='monitoreo.html'
     d={'list':models.RegistroAdmin.objects.all()}
@@ -644,7 +674,7 @@ def estado_servidor(request):
 
 
 def cerrar_sesion(request):
-    request.session['logueado'] = False
+    request.session['registrado_admin'] = False
     request.session.flush()
     return redirect('/autenticacion/')
     
@@ -652,6 +682,7 @@ def logoutAdmin(request):
     """
     Está función tiene el objetivo de poder cerrar una sesión
     """
+    request.session['registrado_admin'] = False
     request.session.flush()
     return redirect('/loginAdmin')
 
